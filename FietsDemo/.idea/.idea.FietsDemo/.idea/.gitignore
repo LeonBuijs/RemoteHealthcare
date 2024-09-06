@@ -4,8 +4,8 @@
 # Rider ignored files
 /modules.xml
 /contentModel.xml
-/.idea.RemoteHealthcare.iml
 /projectSettingsUpdater.xml
+/.idea.FietsDemo.iml
 # Editor-based HTTP Client requests
 /httpRequests/
 # Datasource local storage ignored files
