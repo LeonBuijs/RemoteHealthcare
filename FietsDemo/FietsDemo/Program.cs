@@ -26,11 +26,11 @@ namespace FietsDemo
             }
 
             // Connecting
-            errorCode = errorCode = await bleBike.OpenDevice("Tacx Flux 24517");
+            errorCode = errorCode = await bleBike.OpenDevice("Tacx Flux 00438");
             // __TODO__ Error check
 
             var services = bleBike.GetServices;
-            foreach(var service in services)
+            foreach (var service in services)
             {
                 Console.WriteLine($"Service: {service}");
             }
@@ -44,13 +44,13 @@ namespace FietsDemo
             errorCode = await bleBike.SubscribeToCharacteristic("6e40fec2-b5a3-f393-e0a9-e50e24dcca9e");
 
             // Heart rate
-            errorCode =  await bleHeart.OpenDevice("Decathlon Dual HR");
+            errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
 
             await bleHeart.SetService("HeartRate");
 
             bleHeart.SubscriptionValueChanged += BleBike_SubscriptionValueChanged;
             await bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
-             
+
 
             Console.Read();
         }
@@ -62,7 +62,7 @@ namespace FietsDemo
             //     Encoding.UTF8.GetString(e.Data));
             CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
         }
-        
+
         private static void CalculateData(String data)
         {
             StringBuilder builder = new StringBuilder();
@@ -73,7 +73,7 @@ namespace FietsDemo
                 String numberToAdd = number.ToString();
                 if (numberToAdd.Length == 1)
                 {
-                    numberToAdd = "00" + numberToAdd; 
+                    numberToAdd = "00" + numberToAdd;
                 }
 
                 if (numberToAdd.Length == 2)
@@ -84,9 +84,15 @@ namespace FietsDemo
                 builder.Append(numberToAdd).Append("|").Append(' ');
             }
 
-            builder.Append("\n------------------------");
-            Console.WriteLine(builder.ToString());
+            builder.Append("\n------------------------\n");
+            int parseHex = int.Parse(hexSplit[9], System.Globalization.NumberStyles.HexNumber);
+            string hexString = parseHex.ToString();
+            // builder.Append(hexString);
+            // Console.WriteLine(builder.ToString());
+            if (hexSplit[4] == "10")
+            {
+                Console.WriteLine($"Speed: {hexString} km/h");
+            }
         }
-
     }
 }
