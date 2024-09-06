@@ -57,11 +57,36 @@ namespace FietsDemo
 
         private static void BleBike_SubscriptionValueChanged(object sender, BLESubscriptionValueChangedEventArgs e)
         {
-            Console.WriteLine("Received from {0}: {1}, {2}", e.ServiceName,
-                BitConverter.ToString(e.Data).Replace("-", " "),
-                Encoding.UTF8.GetString(e.Data));
+            // Console.WriteLine("Received from {0}: {1}, {2}", e.ServiceName,
+            //     BitConverter.ToString(e.Data).Replace("-", " "),
+            //     Encoding.UTF8.GetString(e.Data));
+            CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
         }
         
+        private static void CalculateData(String data)
+        {
+            StringBuilder builder = new StringBuilder();
+            String[] hexSplit = data.Split(' ');
+            foreach (String hexDec in hexSplit)
+            {
+                int number = int.Parse(hexDec, System.Globalization.NumberStyles.HexNumber);
+                String numberToAdd = number.ToString();
+                if (numberToAdd.Length == 1)
+                {
+                    numberToAdd = "00" + numberToAdd; 
+                }
+
+                if (numberToAdd.Length == 2)
+                {
+                    numberToAdd = "0" + numberToAdd;
+                }
+
+                builder.Append(numberToAdd).Append("|").Append(' ');
+            }
+
+            builder.Append("\n------------------------");
+            Console.WriteLine(builder.ToString());
+        }
 
     }
 }
