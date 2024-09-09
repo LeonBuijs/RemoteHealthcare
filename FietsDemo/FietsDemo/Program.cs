@@ -55,43 +55,49 @@ namespace FietsDemo
             Console.Read();
         }
 
-        private static void BleBike_SubscriptionValueChanged(object sender, BLESubscriptionValueChangedEventArgs e)
+        private static void BleBike_SubscriptionValueChanged(object Sender, BLESubscriptionValueChangedEventArgs E)
         {
             // Console.WriteLine("Received from {0}: {1}, {2}", e.ServiceName,
             //     BitConverter.ToString(e.Data).Replace("-", " "),
             //     Encoding.UTF8.GetString(e.Data));
-            CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
+            CalculateData(BitConverter.ToString(E.Data).Replace("-", " "));
         }
-
+        
+        /**
+         * De methode CalculateData krijgt de data binnen als een string.
+         * Deze data wordt omgerekend van hex naar een decimaal getal.
+         * Verder worden er aan sommige getallen nullen aan toegevoegd om er voor te zorgen dat er 3 getallen staan,
+         * dit is beter voor de leesbaarheid.
+         */
         private static void CalculateData(String data)
         {
-            StringBuilder builder = new StringBuilder();
-            String[] hexSplit = data.Split(' ');
-            foreach (String hexDec in hexSplit)
+            StringBuilder Builder = new StringBuilder();
+            String[] HexSplit = data.Split(' ');
+            foreach (String hexDec in HexSplit)
             {
-                int number = int.Parse(hexDec, System.Globalization.NumberStyles.HexNumber);
-                String numberToAdd = number.ToString();
-                if (numberToAdd.Length == 1)
+                int Number = int.Parse(hexDec, System.Globalization.NumberStyles.HexNumber);
+                String NumberToAdd = Number.ToString();
+                if (NumberToAdd.Length == 1)
                 {
-                    numberToAdd = "00" + numberToAdd;
+                    NumberToAdd = "00" + NumberToAdd;
                 }
 
-                if (numberToAdd.Length == 2)
+                if (NumberToAdd.Length == 2)
                 {
-                    numberToAdd = "0" + numberToAdd;
+                    NumberToAdd = "0" + NumberToAdd;
                 }
 
-                builder.Append(numberToAdd).Append("|").Append(' ');
+                Builder.Append(NumberToAdd).Append("|").Append(' ');
             }
 
-            builder.Append("\n------------------------\n");
-            int parseHex = int.Parse(hexSplit[9], System.Globalization.NumberStyles.HexNumber);
-            string hexString = parseHex.ToString();
+            Builder.Append("\n------------------------\n");
+            int ParseHex = int.Parse(HexSplit[9], System.Globalization.NumberStyles.HexNumber);
+            string HexString = ParseHex.ToString();
             // builder.Append(hexString);
             // Console.WriteLine(builder.ToString());
-            if (hexSplit[4] == "10")
+            if (HexSplit[4] == "10")
             {
-                Console.WriteLine($"Speed: {hexString} km/h");
+                Console.WriteLine($"Speed: {HexString} km/h");
             }
         }
     }
