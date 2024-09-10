@@ -26,8 +26,9 @@ namespace FietsDemo
             }
 
             // Connecting
-            errorCode = errorCode = await bleBike.OpenDevice("Tacx Flux 00438");
-            // __TODO__ Error check
+            errorCode = await bleBike.OpenDevice("Tacx Flux 24517");
+            // TODO Error check
+            Console.WriteLine($"BikeOpen: {errorCode}");
 
             var services = bleBike.GetServices;
             foreach (var service in services)
@@ -37,20 +38,25 @@ namespace FietsDemo
 
             // Set service
             errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
-            // __TODO__ error check
+            // TODO error check
+            while (errorCode != 0)
+            {
+                errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
+            }
+            Console.WriteLine($"Bike: {errorCode}");
 
             // Subscribe
             bleBike.SubscriptionValueChanged += BleBike_SubscriptionValueChanged;
             errorCode = await bleBike.SubscribeToCharacteristic("6e40fec2-b5a3-f393-e0a9-e50e24dcca9e");
+            Console.WriteLine($"BikeSubscription: {errorCode}");
 
             // Heart rate
             errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
-
+            Console.WriteLine($"Heart: {errorCode}");
             await bleHeart.SetService("HeartRate");
 
             bleHeart.SubscriptionValueChanged += BleBike_SubscriptionValueChanged;
-            await bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
-
+            bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
 
             Console.Read();
         }
@@ -91,14 +97,17 @@ namespace FietsDemo
             }
 
             Builder.Append("\n------------------------\n");
-            int ParseHex = int.Parse(HexSplit[9], System.Globalization.NumberStyles.HexNumber);
-            string HexString = ParseHex.ToString();
-            // builder.Append(hexString);
-            // Console.WriteLine(builder.ToString());
-            if (HexSplit[4] == "10")
-            {
-                Console.WriteLine($"Speed: {HexString} km/h");
-            }
+            // int ParseHex = int.Parse(HexSplit[8], System.Globalization.NumberStyles.HexNumber);
+            // string HexString = ParseHex.ToString();
+            // Builder.Append(HexString);
+            Console.WriteLine(Builder.ToString());
+
+            //check in hex typen
+            //vanaf [4] data uitlezen
+            // if (HexSplit[4] == "10")
+            // {
+            //     // Console.WriteLine($"Data: {ParseHex}");
+            // }
         }
     }
 }
