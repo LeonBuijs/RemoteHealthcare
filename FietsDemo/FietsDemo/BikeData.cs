@@ -10,23 +10,10 @@ namespace FietsDemo
         private int rpm;
         private int heartRate;
 
-        public BikeData(byte[] data)
+        public void UpdateData(byte[] data)
         {
-            if (data[4] == 16)
-            {
-                
-            }
-            else if (data[4] == 25)
-            {
-                
-            }
-
-            this.speed = speed;
-            this.distance = distance;
-            this.time = time;
-            this.watt = watt;
-            this.rpm = rpm;
-            this.heartRate = heartRate;
+        
+            
         }
 
         public int Speed

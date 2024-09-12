@@ -29,6 +29,13 @@ namespace FietsDemo
             errorCode = await bleBike.OpenDevice("Tacx Flux 00438");
             // TODO Error check
             Console.WriteLine($"BikeOpen: {errorCode}");
+            
+            while (errorCode != 0)
+            {
+                errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
+                Thread.Sleep(1000);
+                Console.WriteLine($"BikeOpen: {errorCode}");
+            }
 
             var services = bleBike.GetServices;
             foreach (var service in services)
@@ -39,10 +46,10 @@ namespace FietsDemo
             // Set service
             errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
             // TODO error check
-            // while (errorCode != 0)
-            // {
-            //     errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
-            // }
+            while (errorCode != 0)
+            {
+                errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
+            }
             Console.WriteLine($"Bike: {errorCode}");
 
             // Subscribe
@@ -57,9 +64,24 @@ namespace FietsDemo
             Console.WriteLine($"Heart: {errorCode}");
             await bleHeart.SetService("HeartRate");
 
-            bleHeart.SubscriptionValueChanged += BleBike_SubscriptionValueChanged;
-            bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
+            while (errorCode != 0) 
+            {
+                errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
+                Console.WriteLine($"Heart: {errorCode}");
+                Thread.Sleep(1000);
+            }
 
+            bleHeart.SubscriptionValueChanged += BleBike_SubscriptionValueChanged;
+            errorCode = await bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
+            Console.WriteLine($"HeartRateMeasurement: {errorCode}");
+
+            while (errorCode != 0) 
+            {
+                errorCode = await bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
+                Console.WriteLine($"Heart: {errorCode}");
+                Thread.Sleep(1000);
+            }
+            
             Console.Read();
         }
 
@@ -69,7 +91,10 @@ namespace FietsDemo
             //     BitConverter.ToString(e.Data).Replace("-", " "),
             //     Encoding.UTF8.GetString(e.Data));
             // Console.WriteLine(e.Data);
-            Console.WriteLine(BitConverter.ToString(e.Data));
+            if (e.Data.Length < 7)
+            {
+                Console.WriteLine(BitConverter.ToString(e.Data));
+            }
             // Console.WriteLine(e.Data[4]);
             // CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
         }
