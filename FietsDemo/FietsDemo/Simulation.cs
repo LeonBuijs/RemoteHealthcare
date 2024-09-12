@@ -51,13 +51,13 @@ namespace FietsDemo
 
         private void CalculateDistance()
         {
-            this.distance = (int)((this.speed / 3.6) * this.time);
+            this.distance = ((int)((this.speed / 3.6) * this.time) % 255);
         }
 
         private void UpdateTime()
         {
             Thread.Sleep(1000);
-            this.time++;
+            this.time = (this.time + 1) % 255;
         }
         
     }
