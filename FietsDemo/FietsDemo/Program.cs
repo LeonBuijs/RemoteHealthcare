@@ -26,7 +26,7 @@ namespace FietsDemo
             }
 
             // Connecting
-            errorCode = await bleBike.OpenDevice("Tacx Flux 24517");
+            errorCode = await bleBike.OpenDevice("Tacx Flux 00438");
             // TODO Error check
             Console.WriteLine($"BikeOpen: {errorCode}");
 
@@ -39,16 +39,18 @@ namespace FietsDemo
             // Set service
             errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
             // TODO error check
-            while (errorCode != 0)
-            {
-                errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
-            }
+            // while (errorCode != 0)
+            // {
+            //     errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
+            // }
             Console.WriteLine($"Bike: {errorCode}");
 
             // Subscribe
             bleBike.SubscriptionValueChanged += BleBike_SubscriptionValueChanged;
             errorCode = await bleBike.SubscribeToCharacteristic("6e40fec2-b5a3-f393-e0a9-e50e24dcca9e");
             Console.WriteLine($"BikeSubscription: {errorCode}");
+            //todo byte array zien te maken
+            // bleBike.WriteCharacteristic("6e40fec2-b5a3-f393-e0a9-e50e24dcca9e", new[] { });
 
             // Heart rate
             errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
@@ -61,12 +63,15 @@ namespace FietsDemo
             Console.Read();
         }
 
-        private static void BleBike_SubscriptionValueChanged(object Sender, BLESubscriptionValueChangedEventArgs E)
+        private static void BleBike_SubscriptionValueChanged(object Sender, BLESubscriptionValueChangedEventArgs e)
         {
             // Console.WriteLine("Received from {0}: {1}, {2}", e.ServiceName,
             //     BitConverter.ToString(e.Data).Replace("-", " "),
             //     Encoding.UTF8.GetString(e.Data));
-            CalculateData(BitConverter.ToString(E.Data).Replace("-", " "));
+            // Console.WriteLine(e.Data);
+            Console.WriteLine(BitConverter.ToString(e.Data));
+            // Console.WriteLine(e.Data[4]);
+            // CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
         }
         
         /**
