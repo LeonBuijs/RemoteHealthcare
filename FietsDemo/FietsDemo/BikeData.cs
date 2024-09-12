@@ -4,19 +4,24 @@ namespace FietsDemo
 {
     public class BikeData
     {
-        private bool initialized = false;
-        
-        private int speed;
-        private int time;
-        private int watt;
-        private int rpm;
-        private int heartRate;
-        
+        private bool initialized;
+
+        public int speed { get; set; }
+        public int watt { get; set; }
+        public int rpm { get; set; }
+        public int heartRate { get; set; }
+
+        //attributen voor tijd
+        public double time { get; set; } //todo mogelijk implementeren nog
+        private double lastTime;
+        private int timeFlip;
+        private double timeOffset;
+
         //attributen voor afstanden
-        private int distance;
+        public int distance { get; set; }
         private int lastDistance;
-        private int distanceFlip = 0;
-        private int distanceOffset = 0;
+        private int distanceFlip;
+        private int distanceOffset;
 
         public void UpdateData(string data)
         {
@@ -40,73 +45,71 @@ namespace FietsDemo
         private void changeBikeData(string[] split)
         {
             var PageNumber = int.Parse(split[4], System.Globalization.NumberStyles.HexNumber);
-            
+
             switch (PageNumber)
             {
                 case 16:
-                    // speed = data[8];
-                    // speed = BitConverter.ToInt32(data, 8);
                     speed = int.Parse(split[9], System.Globalization.NumberStyles.HexNumber);
-                    //distance flipt na 597
-                    distance = int.Parse(split[7], System.Globalization.NumberStyles.HexNumber);
-                    
-                    if (lastDistance > 200 && distance < 100)
-                    {
-                        distanceFlip++;
-                    }
-                    
-                    lastDistance = distance;
 
-                    distance += distanceFlip * 256 - distanceOffset;
-                        
+                    calculateTime(split);
+
+                    calculateDistance(split);
+
+                    if (!initialized)
+                    {
+                        timeOffset = time * 0.25;
+                        distanceOffset = distance;
+                        initialized = true;
+                    }
+
                     break;
                 case 25:
                     rpm = int.Parse(split[6], System.Globalization.NumberStyles.HexNumber);
                     watt = int.Parse(split[9], System.Globalization.NumberStyles.HexNumber);
                     break;
             }
+        }
 
-            if (!initialized)
+        private void calculateDistance(string[] split)
+        {
+            //distance flipt na 255
+            distance = int.Parse(split[7], System.Globalization.NumberStyles.HexNumber);
+            if (lastDistance > 200 && distance < 100)
             {
-                distanceOffset = distance;
-                initialized = true;
+                distanceFlip++;
             }
+
+            lastDistance = distance;
+
+            distance += distanceFlip * 256 - distanceOffset;
         }
 
-        public int Speed
+        //todo tijd goed laten weergeven met juiste offset en waardes
+        private void calculateTime(string[] split)
         {
-            get => speed;
-            set => speed = value;
-        }
+            //time flipt na 255
+            var tempTime = int.Parse(split[6], System.Globalization.NumberStyles.HexNumber);
 
-        public int Distance
-        {
-            get => distance;
-            set => distance = value;
-        }
+            var difference = tempTime - lastTime;
+            Console.WriteLine(difference);
 
-        public int Time
-        {
-            get => time;
-            set => time = value;
-        }
+            if (difference < 0)
+            {
+                time += 255 + difference;
+            }
+            else
+            {
+                time += difference * 0.25;
+            }
 
-        public int Watt
-        {
-            get => watt;
-            set => watt = value;
-        }
+            if (lastTime > 200 && tempTime < 100)
+            {
+                timeFlip++;
+            }
 
-        public int Rpm
-        {
-            get => rpm;
-            set => rpm = value;
-        }
+            lastTime = tempTime;
 
-        public int HeartRate
-        {
-            get => heartRate;
-            set => heartRate = value;
+            // time += timeFlip * 64 - timeOffset;
         }
     }
 }

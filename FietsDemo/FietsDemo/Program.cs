@@ -106,7 +106,7 @@ namespace FietsDemo
             // Console.WriteLine(e.Data[4]);
             // CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
             bikeData.UpdateData(BitConverter.ToString(e.Data).Replace("-", " "));
-            Console.WriteLine($"Speed: {bikeData.Speed} RPM: {bikeData.Rpm} Distance: {bikeData.Distance} Watts: {bikeData.Watt} HeartRate: {bikeData.HeartRate}");
+            Console.WriteLine($"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
         }
         
         /**
