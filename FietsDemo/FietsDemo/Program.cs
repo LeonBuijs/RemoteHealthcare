@@ -29,6 +29,13 @@ namespace FietsDemo
             errorCode = await bleBike.OpenDevice("Tacx Flux 00438");
             // TODO Error check
             Console.WriteLine($"BikeOpen: {errorCode}");
+            
+            while (errorCode != 0)
+            {
+                errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
+                Thread.Sleep(1000);
+                Console.WriteLine($"BikeOpen: {errorCode}");
+            }
 
             var services = bleBike.GetServices;
             foreach (var service in services)
@@ -39,10 +46,10 @@ namespace FietsDemo
             // Set service
             errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
             // TODO error check
-            // while (errorCode != 0)
-            // {
-            //     errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
-            // }
+            while (errorCode != 0)
+            {
+                errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
+            }
             Console.WriteLine($"Bike: {errorCode}");
 
             // Subscribe
@@ -55,23 +62,51 @@ namespace FietsDemo
             // Heart rate
             errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
             Console.WriteLine($"Heart: {errorCode}");
-            await bleHeart.SetService("HeartRate");
+            while (errorCode != 0) 
+            {
+                errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
+                Console.WriteLine($"Heart: {errorCode}");
+                Thread.Sleep(1000);
+            }
+            
+            errorCode = await bleHeart.SetService("HeartRate");
+            Console.WriteLine($"HeartRate: {errorCode}");
+            while (errorCode != 0) 
+            {
+                errorCode = await bleHeart.SetService("HeartRate");
+                Console.WriteLine($"Heart: {errorCode}");
+                Thread.Sleep(1000);
+            }
 
             bleHeart.SubscriptionValueChanged += BleBike_SubscriptionValueChanged;
-            bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
+            errorCode = await bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
+            Console.WriteLine($"HeartRateMeasurement: {errorCode}");
 
+            while (errorCode != 0) 
+            {
+                errorCode = await bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
+                Console.WriteLine($"Heart: {errorCode}");
+                Thread.Sleep(1000);
+            }
+            
             Console.Read();
         }
 
+        private static BikeData bikeData = new BikeData();
         private static void BleBike_SubscriptionValueChanged(object Sender, BLESubscriptionValueChangedEventArgs e)
         {
             // Console.WriteLine("Received from {0}: {1}, {2}", e.ServiceName,
             //     BitConverter.ToString(e.Data).Replace("-", " "),
             //     Encoding.UTF8.GetString(e.Data));
             // Console.WriteLine(e.Data);
-            Console.WriteLine(BitConverter.ToString(e.Data));
+            // if (e.Data.Length < 7)
+            // {
+                // Console.WriteLine(BitConverter.ToString(e.Data));
+            // }
             // Console.WriteLine(e.Data[4]);
             // CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
+            bikeData.UpdateData(BitConverter.ToString(e.Data).Replace("-", " "));
+            Console.WriteLine($"Speed: {bikeData.Speed} RPM: {bikeData.Rpm} Distance: {bikeData.Distance} Watts: {bikeData.Watt} HeartRate: {bikeData.HeartRate}");
         }
         
         /**
@@ -102,17 +137,17 @@ namespace FietsDemo
             }
 
             Builder.Append("\n------------------------\n");
-            // int ParseHex = int.Parse(HexSplit[8], System.Globalization.NumberStyles.HexNumber);
+            // int ParseHex = int.Parse(HexSplit[9], System.Globalization.NumberStyles.HexNumber);
             // string HexString = ParseHex.ToString();
             // Builder.Append(HexString);
             Console.WriteLine(Builder.ToString());
 
             //check in hex typen
             //vanaf [4] data uitlezen
-            // if (HexSplit[4] == "10")
-            // {
-            //     // Console.WriteLine($"Data: {ParseHex}");
-            // }
+            if (HexSplit[4] == "10")
+            {
+                // Console.WriteLine($"Data: {ParseHex}");
+            }
         }
     }
 }
