@@ -53,7 +53,7 @@ namespace FietsDemo
 
                     calculateTime(split);
 
-                    calculateDistance(split);
+                    CalculateDistance(split);
 
                     if (!initialized)
                     {
@@ -70,7 +70,7 @@ namespace FietsDemo
             }
         }
 
-        private void calculateDistance(string[] split)
+        private void CalculateDistance(string[] split)
         {
             //distance flipt na 255
             distance = int.Parse(split[7], System.Globalization.NumberStyles.HexNumber);
@@ -91,7 +91,6 @@ namespace FietsDemo
             var tempTime = int.Parse(split[6], System.Globalization.NumberStyles.HexNumber);
 
             var difference = tempTime - lastTime;
-            Console.WriteLine(difference);
 
             if (difference < 0)
             {
@@ -108,8 +107,6 @@ namespace FietsDemo
             }
 
             lastTime = tempTime;
-
-            // time += timeFlip * 64 - timeOffset;
         }
     }
 }

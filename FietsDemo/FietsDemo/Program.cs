@@ -10,13 +10,16 @@ namespace FietsDemo
 {
     class Program
     {
+        private static Simulation Simulation = new Simulation(10, 100, 20, 69);
         static async Task Main(string[] args)
         {
             int errorCode = 0;
             BLE bleBike = new BLE();
             BLE bleHeart = new BLE();
             Thread.Sleep(1000); // We need some time to list available devices
-
+            
+            // StartSimulation();
+            
             // List available devices
             List<String> bleBikeList = bleBike.ListDevices();
             Console.WriteLine("Devices found: ");
@@ -36,6 +39,8 @@ namespace FietsDemo
                 Thread.Sleep(1000);
                 Console.WriteLine($"BikeOpen: {errorCode}");
             }
+            
+            
 
             var services = bleBike.GetServices;
             foreach (var service in services)
@@ -91,6 +96,8 @@ namespace FietsDemo
             
             Console.Read();
         }
+        
+        
 
         private static BikeData bikeData = new BikeData();
         private static void BleBike_SubscriptionValueChanged(object Sender, BLESubscriptionValueChangedEventArgs e)
@@ -105,8 +112,19 @@ namespace FietsDemo
             // }
             // Console.WriteLine(e.Data[4]);
             // CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
-            bikeData.UpdateData(BitConverter.ToString(e.Data).Replace("-", " "));
+            // bikeData.UpdateData(BitConverter.ToString(e.Data).Replace("-", " "));
+            bikeData.UpdateData(BitConverter.ToString(Simulation.GenerateData()).Replace("-", " "));
             Console.WriteLine($"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
+        }
+        
+        //method to use simulated data
+        private static void StartSimulation()
+        {
+            while (true)
+            {
+                bikeData.UpdateData(BitConverter.ToString(Simulation.GenerateData()).Replace("-", " "));
+                Console.WriteLine($"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
+            }
         }
         
         /**
