@@ -1,10 +1,26 @@
+using System.Net;
+using System.Net.Sockets;
+using FietsDemo;
+
 namespace SimulationGUI;
 
 public partial class Form1 : Form
 {
+    private TcpListener server;
+    private NetworkStream networkStream;
+    private TcpClient client;
+    private Simulation simulation;
+    
     public Form1()
     {
         InitializeComponent();
+        this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
+        
+        server = new TcpListener(IPAddress.Parse("127.0.0.1"), 7777);
+        server.Start();
+        client = server.AcceptTcpClient();
+        networkStream = client.GetStream();
+        
     }
 
     private void Form1_Load(object sender, EventArgs e)
@@ -36,7 +52,7 @@ public partial class Form1 : Form
         
         Label label3 = new Label()
         {
-            Text = "&Wattage",
+            Text = "&RPM",
             Location = new Point(290, 10),
             TabIndex = 4
         };
@@ -49,7 +65,7 @@ public partial class Form1 : Form
         
         Label label4 = new Label()
         {
-            Text = "&Wattage",
+            Text = "&HeartRate",
             Location = new Point(430, 10),
             TabIndex = 6
         };
@@ -59,7 +75,16 @@ public partial class Form1 : Form
             Location = new Point(label4.Location.X, label4.Bounds.Bottom + Padding.Top),
             TabIndex = 7
         };
-        
+        Button sendButton = new Button()
+        {
+            Location = new Point(570, 10),
+            TabIndex = 8,
+            Text = "Send",
+            Width = 100,
+            Height = 50
+        };
+
+        sendButton.Click += (s, e) => SendData(field1, field2, field3, field4);
        
         Controls.Add(label1);
         Controls.Add(field1);
@@ -72,6 +97,31 @@ public partial class Form1 : Form
         
         Controls.Add(label4);
         Controls.Add(field4);
+        Controls.Add(sendButton);
         
+        
+    }
+
+    private void SendData(TextBox field1, TextBox field2, TextBox field3, TextBox field4)
+    {
+        Console.WriteLine($"Speed: {field1.Text}, Watt: {field2.Text}, RPM: {field3.Text}, HeartRate: {field4.Text}");
+        simulation = new Simulation(Convert.ToInt32(field1.Text), Convert.ToInt32(field2.Text), Convert.ToInt32(field3.Text), Convert.ToInt32(field4.Text));
+        Thread thread = new Thread(SendData);
+        thread.Start();
+    }
+
+    private void SendData()
+    {
+        while (true)
+        {
+            networkStream.Write(simulation.GenerateData(), 0, simulation.GenerateData().Length);
+        }
+    }
+    
+    private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        networkStream.Close();
+        client.Close();
+        server.Stop();
     }
 }
