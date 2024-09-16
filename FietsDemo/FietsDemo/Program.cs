@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,15 +13,16 @@ namespace FietsDemo
     class Program
     {
         private static Simulation Simulation = new Simulation(10, 100, 20, 69);
+
         static async Task Main(string[] args)
         {
             int errorCode = 0;
             BLE bleBike = new BLE();
             BLE bleHeart = new BLE();
             Thread.Sleep(1000); // We need some time to list available devices
-            
+
             // StartSimulation();
-            
+
             // List available devices
             List<String> bleBikeList = bleBike.ListDevices();
             Console.WriteLine("Devices found: ");
@@ -29,18 +32,17 @@ namespace FietsDemo
             }
 
             // Connecting
-            errorCode = await bleBike.OpenDevice("Tacx Flux 00438");
+            errorCode = await bleBike.OpenDevice("Tacx Flux 01140");
             // TODO Error check
             Console.WriteLine($"BikeOpen: {errorCode}");
-            
+
             while (errorCode != 0)
             {
                 errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
                 Thread.Sleep(1000);
                 Console.WriteLine($"BikeOpen: {errorCode}");
             }
-            
-            
+
 
             var services = bleBike.GetServices;
             foreach (var service in services)
@@ -55,6 +57,7 @@ namespace FietsDemo
             {
                 errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
             }
+
             Console.WriteLine($"Bike: {errorCode}");
 
             // Subscribe
@@ -67,16 +70,16 @@ namespace FietsDemo
             // Heart rate
             errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
             Console.WriteLine($"Heart: {errorCode}");
-            while (errorCode != 0) 
+            while (errorCode != 0)
             {
                 errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
                 Console.WriteLine($"Heart: {errorCode}");
                 Thread.Sleep(1000);
             }
-            
+
             errorCode = await bleHeart.SetService("HeartRate");
             Console.WriteLine($"HeartRate: {errorCode}");
-            while (errorCode != 0) 
+            while (errorCode != 0)
             {
                 errorCode = await bleHeart.SetService("HeartRate");
                 Console.WriteLine($"Heart: {errorCode}");
@@ -87,19 +90,20 @@ namespace FietsDemo
             errorCode = await bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
             Console.WriteLine($"HeartRateMeasurement: {errorCode}");
 
-            while (errorCode != 0) 
+            while (errorCode != 0)
             {
                 errorCode = await bleHeart.SubscribeToCharacteristic("HeartRateMeasurement");
                 Console.WriteLine($"Heart: {errorCode}");
                 Thread.Sleep(1000);
             }
-            
+
+
             Console.Read();
         }
-        
-        
+
 
         private static BikeData bikeData = new BikeData();
+
         private static void BleBike_SubscriptionValueChanged(object Sender, BLESubscriptionValueChangedEventArgs e)
         {
             // Console.WriteLine("Received from {0}: {1}, {2}", e.ServiceName,
@@ -108,25 +112,47 @@ namespace FietsDemo
             // Console.WriteLine(e.Data);
             // if (e.Data.Length < 7)
             // {
-                // Console.WriteLine(BitConverter.ToString(e.Data));
+            // Console.WriteLine(BitConverter.ToString(e.Data));
             // }
             // Console.WriteLine(e.Data[4]);
             // CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
             // bikeData.UpdateData(BitConverter.ToString(e.Data).Replace("-", " "));
-            bikeData.UpdateData(BitConverter.ToString(Simulation.GenerateData()).Replace("-", " "));
-            Console.WriteLine($"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
+
+            bikeData.UpdateData(BitConverter.ToString(e.Data).Replace("-", " "));
+            Console.WriteLine(
+                $"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
         }
-        
+
         //method to use simulated data
         private static void StartSimulation()
         {
+            Console.WriteLine("SIMULATION MODE");
+
+            TcpListener tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), 7777);
+            tcpListener.Start();
+
+            TcpClient tcpClient = tcpListener.AcceptTcpClient();
+
+            byte[] SimulationData = new byte[1024];
+
+            new Thread(() =>
+            {
+                NetworkStream stream = tcpClient.GetStream();
+
+                byte[] buffer = new byte[1024];
+                char[] charBuffer = new char[1024];
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                SimulationData = Encoding.UTF8.GetBytes(charBuffer, 0, bytesRead);
+            }).Start();
+
             while (true)
             {
-                bikeData.UpdateData(BitConverter.ToString(Simulation.GenerateData()).Replace("-", " "));
-                Console.WriteLine($"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
+                bikeData.UpdateData(BitConverter.ToString(SimulationData).Replace("-", " "));
+                Console.WriteLine(
+                    $"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
             }
         }
-        
+
         /**
          * De methode CalculateData krijgt de data binnen als een string.
          * Deze data wordt omgerekend van hex naar een decimaal getal.

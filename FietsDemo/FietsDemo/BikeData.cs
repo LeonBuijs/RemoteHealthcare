@@ -57,7 +57,7 @@ namespace FietsDemo
 
                     if (!initialized)
                     {
-                        timeOffset = time * 0.25;
+                        time = 0;
                         distanceOffset = distance;
                         initialized = true;
                     }
@@ -94,7 +94,7 @@ namespace FietsDemo
 
             if (difference < 0)
             {
-                time += 255 + difference;
+                time += 256 + difference;
             }
             else
             {
