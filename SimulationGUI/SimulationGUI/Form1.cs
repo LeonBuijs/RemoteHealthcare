@@ -16,7 +16,7 @@ public partial class Form1 : Form
         InitializeComponent();
         this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
         
-        server = new TcpListener(IPAddress.Parse("127.0.0.1"), 7777);
+        server = new TcpListener(IPAddress.Parse("127.0.0.1"), 8080);
         server.Start();
         client = server.AcceptTcpClient();
         networkStream = client.GetStream();
@@ -114,7 +114,10 @@ public partial class Form1 : Form
     {
         while (true)
         {
-            networkStream.Write(simulation.GenerateData(), 0, simulation.GenerateData().Length);
+            byte[] array = simulation.GenerateData();
+            Console.WriteLine(BitConverter.ToString(array).Replace("-", " "));
+            networkStream.Write(array, 0, array.Length);
+            Thread.Sleep(100);
         }
     }
     

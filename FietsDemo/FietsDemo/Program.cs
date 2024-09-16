@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avans.TI.BLE;
@@ -12,16 +9,18 @@ namespace FietsDemo
 {
     class Program
     {
-        private static Simulation Simulation = new Simulation(10, 100, 20, 69);
+        private static BikeData bikeData = new BikeData();
 
         static async Task Main(string[] args)
         {
-            int errorCode = 0;
+            int errorCode;
             BLE bleBike = new BLE();
             BLE bleHeart = new BLE();
             Thread.Sleep(1000); // We need some time to list available devices
 
-            // StartSimulation();
+            // StartSimulation(); todo uitcommenten voor simulator
+
+            //todo betere afhandeling verbinding, nu in oneindige loop wanneer er verbonden wordt
 
             // List available devices
             List<String> bleBikeList = bleBike.ListDevices();
@@ -33,7 +32,6 @@ namespace FietsDemo
 
             // Connecting
             errorCode = await bleBike.OpenDevice("Tacx Flux 01140");
-            // TODO Error check
             Console.WriteLine($"BikeOpen: {errorCode}");
 
             while (errorCode != 0)
@@ -52,7 +50,6 @@ namespace FietsDemo
 
             // Set service
             errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
-            // TODO error check
             while (errorCode != 0)
             {
                 errorCode = await bleBike.SetService("6e40fec1-b5a3-f393-e0a9-e50e24dcca9e");
@@ -64,8 +61,6 @@ namespace FietsDemo
             bleBike.SubscriptionValueChanged += BleBike_SubscriptionValueChanged;
             errorCode = await bleBike.SubscribeToCharacteristic("6e40fec2-b5a3-f393-e0a9-e50e24dcca9e");
             Console.WriteLine($"BikeSubscription: {errorCode}");
-            //todo byte array zien te maken
-            // bleBike.WriteCharacteristic("6e40fec2-b5a3-f393-e0a9-e50e24dcca9e", new[] { });
 
             // Heart rate
             errorCode = await bleHeart.OpenDevice("Decathlon Dual HR");
@@ -97,100 +92,37 @@ namespace FietsDemo
                 Thread.Sleep(1000);
             }
 
-
             Console.Read();
         }
 
 
-        private static BikeData bikeData = new BikeData();
-
         private static void BleBike_SubscriptionValueChanged(object Sender, BLESubscriptionValueChangedEventArgs e)
         {
-            // Console.WriteLine("Received from {0}: {1}, {2}", e.ServiceName,
-            //     BitConverter.ToString(e.Data).Replace("-", " "),
-            //     Encoding.UTF8.GetString(e.Data));
-            // Console.WriteLine(e.Data);
-            // if (e.Data.Length < 7)
-            // {
-            // Console.WriteLine(BitConverter.ToString(e.Data));
-            // }
-            // Console.WriteLine(e.Data[4]);
-            // CalculateData(BitConverter.ToString(e.Data).Replace("-", " "));
-            // bikeData.UpdateData(BitConverter.ToString(e.Data).Replace("-", " "));
-
             bikeData.UpdateData(BitConverter.ToString(e.Data).Replace("-", " "));
             Console.WriteLine(
                 $"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
         }
 
-        //method to use simulated data
+
+        /**
+         * Methode om verbinding te maken met de simulator applicatie
+         */
+        
         private static void StartSimulation()
         {
             Console.WriteLine("SIMULATION MODE");
 
-            TcpListener tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), 7777);
-            tcpListener.Start();
-
-            TcpClient tcpClient = tcpListener.AcceptTcpClient();
-
-            byte[] SimulationData = new byte[1024];
-
-            new Thread(() =>
-            {
-                NetworkStream stream = tcpClient.GetStream();
-
-                byte[] buffer = new byte[1024];
-                char[] charBuffer = new char[1024];
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                SimulationData = Encoding.UTF8.GetBytes(charBuffer, 0, bytesRead);
-            }).Start();
+            TcpClient tcpClient = new TcpClient("127.0.0.1", 8080);
 
             while (true)
             {
-                bikeData.UpdateData(BitConverter.ToString(SimulationData).Replace("-", " "));
+                NetworkStream stream = tcpClient.GetStream();
+
+                byte[] buffer1 = new byte[1024];
+                int bytesRead1 = stream.Read(buffer1, 0, buffer1.Length);
+                bikeData.UpdateData(BitConverter.ToString(buffer1, 0, bytesRead1).Replace("-", " "));
                 Console.WriteLine(
                     $"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
-            }
-        }
-
-        /**
-         * De methode CalculateData krijgt de data binnen als een string.
-         * Deze data wordt omgerekend van hex naar een decimaal getal.
-         * Verder worden er aan sommige getallen nullen aan toegevoegd om er voor te zorgen dat er 3 getallen staan,
-         * dit is beter voor de leesbaarheid.
-         */
-        private static void CalculateData(String data)
-        {
-            StringBuilder Builder = new StringBuilder();
-            String[] HexSplit = data.Split(' ');
-            foreach (String hexDec in HexSplit)
-            {
-                int Number = int.Parse(hexDec, System.Globalization.NumberStyles.HexNumber);
-                String NumberToAdd = Number.ToString();
-                if (NumberToAdd.Length == 1)
-                {
-                    NumberToAdd = "00" + NumberToAdd;
-                }
-
-                if (NumberToAdd.Length == 2)
-                {
-                    NumberToAdd = "0" + NumberToAdd;
-                }
-
-                Builder.Append(NumberToAdd).Append("|").Append(' ');
-            }
-
-            Builder.Append("\n------------------------\n");
-            // int ParseHex = int.Parse(HexSplit[9], System.Globalization.NumberStyles.HexNumber);
-            // string HexString = ParseHex.ToString();
-            // Builder.Append(HexString);
-            Console.WriteLine(Builder.ToString());
-
-            //check in hex typen
-            //vanaf [4] data uitlezen
-            if (HexSplit[4] == "10")
-            {
-                // Console.WriteLine($"Data: {ParseHex}");
             }
         }
     }
