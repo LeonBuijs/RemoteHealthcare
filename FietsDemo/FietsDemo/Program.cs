@@ -104,7 +104,7 @@ namespace FietsDemo
         }
         
         /**
-         * Main method for sending a data package to a certain bleBike
+         * Hoofdmethode om data naar een fiets te sturen
          */
         private static async void SendMessageToBike(byte[] payload, BLE bleBike)
         {
@@ -139,7 +139,7 @@ namespace FietsDemo
         }
 
         /**
-         * Specific method to set the resistance of a specific bike
+         * Specefieke methode om de weerstand van de fiets aan te passen 
          */
         public static void setResistance(byte resistance, BLE bike)
         {
