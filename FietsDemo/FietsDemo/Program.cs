@@ -102,7 +102,52 @@ namespace FietsDemo
             Console.WriteLine(
                 $"Speed: {bikeData.speed} RPM: {bikeData.rpm} Distance: {bikeData.distance} Watts: {bikeData.watt} Time: {bikeData.time} HeartRate: {bikeData.heartRate}");
         }
+        
+        /**
+         * Main method for sending a data package to a certain bleBike
+         */
+        private static async void SendMessageToBike(byte[] payload, BLE bleBike)
+        {
+            byte sync = 0xA4;
+            byte length = 0x09;
+            byte msgId = 0x4E;
+            byte channelNumber = 0x05;
+            
+            byte checksum = 0x00;
+            checksum ^= sync;
+            checksum ^= length;
+            checksum ^= msgId;
+            checksum ^= channelNumber;
 
+            foreach (byte b in payload)
+            {
+                checksum ^= b;
+            }
+            
+            byte[] data = new byte[payload.Length + 5];
+            data[0] = sync;
+            data[1] = length;
+            data[2] = msgId;
+            data[3] = channelNumber;
+            payload.CopyTo(data, 4);
+            data[data.Length-1] = checksum;
+            
+            int errorCode = await bleBike.WriteCharacteristic(
+                "6e40fec3-b5a3-f393-e0a9-e50e24dcca9e"
+                , data);
+            Console.WriteLine($"sending message with code: {errorCode}" );
+        }
+
+        /**
+         * Specific method to set the resistance of a specific bike
+         */
+        public static void setResistance(byte resistance, BLE bike)
+        {
+            byte resistancePage = 0x30;
+            byte zero = 0x00;
+            byte[] payload = { resistancePage, zero, zero, zero, zero, zero, zero, resistance };
+            SendMessageToBike(payload, bike);
+        }
 
         /**
          * Methode om verbinding te maken met de simulator applicatie
